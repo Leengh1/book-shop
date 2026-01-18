@@ -1,0 +1,61 @@
+name: Django App
+
+on:
+  push:
+    branches: [ dev, main]
+  workflow_dispatch: 
+
+jobs:
+
+  version:
+   runs-on: ubuntu-latest
+   steps:
+     - name: Checkout
+       uses: actions/checkout@v4
+
+     - name: Extract Version 
+       run: |
+        VERSION=$(python3 -c "
+        import tomli
+        with open('pyproject.toml','rb') as f:
+            data = tomli.load(f)
+        print(data['tool']['project']['version'])
+        ")
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
+        echo "version: \"$VERSION \"" > version.yaml
+        ls -l
+
+     - name: Debugging the version
+       run: echo $VERSION
+
+     - name: Upload Versoin artifact
+       uses: actions/upload-artifact@v4
+       with:
+         name: version
+         path: version.yaml
+
+
+  build:
+   runs-on: ubuntu-latest
+   steps:
+     - name: Checkout
+       uses: actions/checkout@v4
+
+     - name: Install Poetry
+       run: pip install poetry
+
+     - name: Package Django app
+       run: poetry build
+       working-directory: ${{ github.workspace }}/book-shop
+
+     - name: Upload dist artifacts
+       uses: actions/upload-artifact@v4
+       with:
+         name: django-dist
+         path: book-shop/dist/*
+
+
+
+
+
+     
