@@ -16,10 +16,11 @@ jobs:
      - name: Extract Version 
        run: |
         VERSION=$(python3 -c "
-        import tomli
-        with open('pyproject.toml','rb') as f:
-            data = tomli.load(f)
-        print(data['tool']['project']['version'])
+        import re
+        with open('pyproject.toml') as f:
+            content = f.read()
+        match = re.search(r'version\s*=\s*\"([^\"]+)\"', content)
+        print(match.group(1))
         ")
         echo "VERSION=$VERSION" >> $GITHUB_ENV
         echo "version: \"$VERSION \"" > version.yaml
