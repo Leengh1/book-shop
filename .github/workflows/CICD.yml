@@ -53,7 +53,7 @@ jobs:
        uses: actions/upload-artifact@v4
        with:
          name: django-dist
-         path: book-shop/dist/*
+         path: dist/*
 
   docker:
    runs-on: ubuntu-latest
