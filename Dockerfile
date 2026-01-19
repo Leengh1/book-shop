@@ -10,13 +10,12 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip install --upgrade pip setuptools wheel
-RUN pip install poetry
+RUN pip install --upgrade pip && pip install poetry
 
 COPY pyproject.toml poetry.lock* /app/
 COPY app/ /app/
 
-RUN poetry install --no-dev
+RUN poetry install --no-root --only main
 
 ENV PORT=80
 EXPOSE 80
