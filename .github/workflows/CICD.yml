@@ -166,3 +166,34 @@ jobs:
                       ${{ secrets.AWS_ECR_URL }}/book-shop:${{ steps.extract.outputs.BASE_TAG }}
             docker push ${{ secrets.AWS_ECR_URL }}/book-shop:${{ steps.extract.outputs.BASE_TAG }}
 
+  deploy-dev:
+    runs-on: ubuntu-latest  
+    if: github.ref == 'refs/heads/dev'
+    needs: docker 
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+           name: version
+
+      - name: Load version into enviroment
+        run: |
+          VERSION=$(grep 'version' version.yaml | cut -d'"' -f2)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: ssh to the server
+        uses: appleboy/ssh-action@v1.0.3
+        with:  
+          host: ${{ secrets.HOST }} 
+          username: ${{ secrets.HOST_NAME }}
+          key: ${{ secrets.KEY }}
+          script: | 
+           docker pull ${{ secrets.AWS_ECR_URL }}/book-shop:${{ env.VERSION }}-snapshot
+           docker stop bookshop-snapshot
+           docker rm bookshop-snapshot
+           docker run -d \
+            -e PORT=4000 \
+            -p 8080:4000 \
+            --name bookshop-dev \
+            ${{ secrets.AWS_ECR_URL }}/book-shop:${{ env.VERSION }}-snapshot
+            
