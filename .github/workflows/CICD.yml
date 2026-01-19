@@ -191,16 +191,6 @@ jobs:
           VERSION=$(grep 'version' version.yaml | cut -d'"' -f2)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
-      - name: Config AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-         aws-region: ${{ secrets.AWS_REGION }}
-    
-      - name: login into AWS ECR
-        uses: aws-actions/amazon-ecr-login@v2
-
       - name: ssh to the server
         uses: appleboy/ssh-action@v1.0.3
         with:  
@@ -208,7 +198,16 @@ jobs:
           username: ${{ secrets.HOST_NAME }}
           key: ${{ secrets.KEY }}
           script: | 
-           docker pull ${{ secrets.AWS_ECR_URL }}/book-shop:${{ env.VERSION }}-snapshot
+           export AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+           export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+           export AWS_REGION=${{ secrets.AWS_REGION }}
+           export ACCOUNT_ID=${{ secrets.ACCOUNT_ID }}
+
+           aws ecr get-login-password --region $AWS_REGION \
+             | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+
+           docker pull $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/book-shop:${{ env.VERSION }}-snapshot
+           
            docker stop bookshop-snapshot
            docker rm bookshop-snapshot
            docker run -d \
