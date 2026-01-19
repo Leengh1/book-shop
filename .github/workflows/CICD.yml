@@ -68,7 +68,7 @@ jobs:
      - name: Upload artifacts
        uses: actions/upload-artifact@v4
        with:
-         name: django-dist
+         name: django-app
          path: artifacts/*
 
   docker:
@@ -85,14 +85,13 @@ jobs:
 
      - name: Load version into environment
        run: |
-          VERSION=$(grep 'version' version.yaml)
-          echo $VERSION
+          VERSION=$(grep 'version' version.yaml | cut -d'"' -f2)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
      - name: Download artifact
        uses: actions/download-artifact@v4
        with:
-        name: django-dist
+        name: django-app
         path: dist
 
      - name: Config AWS credentials
@@ -102,8 +101,16 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ secrets.AWS_REGION }}
 
+     - name: login into AWS ECR
+       uses: aws-actions/amazon-ecr-login@v2
 
-
+     - name : Build and push Image
+       uses: docker/build-push-action@v6
+       with:
+        context: .
+        file: ./Dockerfile
+        push: true
+        tags: ${{ secrets.AWS_ECR_URL }}/book_shop:${{ env.VERSION }}
 
 
 
