@@ -29,7 +29,7 @@ jobs:
      - name: Debugging the version
        run: echo $VERSION
 
-     - name: Upload Versoin artifact
+     - name: Upload Version artifact
        uses: actions/upload-artifact@v4
        with:
          name: version
@@ -94,6 +94,14 @@ jobs:
         name: django-app
         path: dist
 
+     - name: Extract app artifact
+       run: |
+          mkdir -p app
+          ARTIFACT=$(ls -1 dist/*.whl | tail -n 1)
+          echo "Artifact found: $ARTIFACT"
+          cp "$ARTIFACT" app/
+          ls -l app
+
      - name: Config AWS credentials
        uses: aws-actions/configure-aws-credentials@v4
        with:
@@ -110,7 +118,7 @@ jobs:
         context: .
         file: ./Dockerfile
         push: true
-        tags: ${{ secrets.AWS_ECR_URL }}/book-shop:${{ env.VERSION }}
+        tags: ${{ secrets.AWS_ECR_URL }}/djangoapp:${{ env.VERSION }}
 
 
 

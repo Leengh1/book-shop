@@ -6,7 +6,7 @@ WORKDIR /app
 
 RUN pip install --upgrade pip 
 
-COPY dist/*.whl /app/
+COPY app/ /app/
 
 RUN pip install *.whl gunicorn
 
