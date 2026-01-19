@@ -161,8 +161,8 @@ jobs:
      
        - name: Tag & push promoted image
          run: |
-            docker pull ${{ secrets.AWS_ECR_URL }}/book-shop:${{ steps.extract.outputs.LATEST_TAG }}
-            docker tag ${{ secrets.AWS_ECR_URL }}/book-shop:${{ steps.extract.outputs.LATEST_TAG }} \
-                      ${{ secrets.AWS_ECR_URL }}/book-shop:${{ steps.extract.outputs.BASE_TAG }}
-            docker push ${{ secrets.AWS_ECR_URL }}/book-shop:${{ steps.extract.outputs.BASE_TAG }}
+            docker pull ${{ secrets.AWS_ECR_URL }}/book-shop:${{ steps.extract.outputs.$LATEST_TAG }}
+            docker tag ${{ secrets.AWS_ECR_URL }}/book-shop:${{ steps.extract.outputs.$LATEST_TAG }} \
+                      ${{ secrets.AWS_ECR_URL }}/book-shop:${{ steps.extract.outputs.$BASE_TAG }}
+            docker push ${{ secrets.AWS_ECR_URL }}/book-shop:${{ steps.extract.outputs.$BASE_TAG }}
 
