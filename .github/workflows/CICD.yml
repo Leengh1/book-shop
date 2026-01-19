@@ -213,6 +213,6 @@ jobs:
            docker run -d \
             -e PORT=4000 \
             -p 8080:4000 \
-            --name bookshop-dev \
+            --name bookshop-snapshot \
             ${{ secrets.AWS_ECR_URL }}/book-shop:${{ env.VERSION }}-snapshot
             
