@@ -4,9 +4,13 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
+
 RUN apt-get update && apt-get install -y \
     build-essential \
     libpq-dev \
+    libffi-dev \
+    libssl-dev \
+    python3-dev \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
@@ -16,6 +20,7 @@ COPY pyproject.toml poetry.lock* /app/
 COPY app/ /app/
 
 RUN poetry install --no-root --only main
+
 
 ENV PORT=80
 EXPOSE 80
