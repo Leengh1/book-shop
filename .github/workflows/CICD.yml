@@ -120,25 +120,14 @@ jobs:
         push: true
         tags: ${{ secrets.AWS_ECR_URL }}/book-shop:${{ env.VERSION }}-snapshot
 
-
-
-  promote:
+  get-latest-image:
    runs-on: ubuntu-latest
-   if: github.ref == 'refs/heads/main'
-   needs: docker
+   outputs:
+      latest_tag: ${{ steps.extractlatest.outputs.LATEST_TAG }}
+   needs: docker 
    steps:
-       - name: Config AWS credentials
-         uses: aws-actions/configure-aws-credentials@v4
-         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
-    
-       - name: login into AWS ECR
-         uses: aws-actions/amazon-ecr-login@v2
-
-       - name: Get latest image with test tag
-         id: extract 
+       - name: Get latest image with snapshot tag
+         id: extractlatest 
          run: |
           LATEST_TAG=$(aws ecr describe-images \
             --repository-name book-shop \
@@ -153,23 +142,44 @@ jobs:
 
           LATEST_TAG=$(echo "$LATEST_TAG" | tr -d '"')
           echo "LATEST_TAG = $LATEST_TAG"
-
-          BASE_TAG=$(echo "$LATEST_TAG" | cut -d'-' -f1)
-          echo "BASE_TAG = $BASE_TAG"
           echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_OUTPUT
+
+
+  promote:
+   runs-on: ubuntu-latest
+   if: github.ref == 'refs/heads/main'
+   outputs:
+     base_tag: ${{ steps.extractbase.outputs.BASE_TAG }}
+   needs: get-latest-image
+   steps:
+       - name: Config AWS credentials
+         uses: aws-actions/configure-aws-credentials@v4
+         with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+    
+       - name: login into AWS ECR
+         uses: aws-actions/amazon-ecr-login@v2
+
+       - name: Get base image
+         id: extractbase 
+         run: |
+          BASE_TAG=$(echo "${{ needs.get-latest-image.outputs.latest_tag }}" | cut -d'-' -f1)
+          echo "BASE_TAG = $BASE_TAG"
           echo "BASE_TAG=$BASE_TAG" >> $GITHUB_OUTPUT
      
        - name: Tag & push promoted image
          run: |
-            docker pull ${{ secrets.AWS_ECR_URL }}/book-shop:${{ steps.extract.outputs.LATEST_TAG }}
-            docker tag ${{ secrets.AWS_ECR_URL }}/book-shop:${{ steps.extract.outputs.LATEST_TAG }} \
-                      ${{ secrets.AWS_ECR_URL }}/book-shop:${{ steps.extract.outputs.BASE_TAG }}
-            docker push ${{ secrets.AWS_ECR_URL }}/book-shop:${{ steps.extract.outputs.BASE_TAG }}
+            docker pull ${{ secrets.AWS_ECR_URL }}/book-shop:${{ needs.get-latest-image.outputs.latest_tag }}
+            docker tag ${{ secrets.AWS_ECR_URL }}/book-shop:${{ needs.get-latest-image.outputs.latest_tag }} \
+                      ${{ secrets.AWS_ECR_URL }}/book-shop:${{ steps.extractbase.outputs.base_tag }}
+            docker push ${{ secrets.AWS_ECR_URL }}/book-shop:${{ steps.extractbase.outputs.base_tag }}
 
   deploy-dev:
     runs-on: ubuntu-latest  
     if: github.ref == 'refs/heads/dev'
-    needs: docker 
+    needs: get-latest-image 
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v4
@@ -180,6 +190,16 @@ jobs:
         run: |
           VERSION=$(grep 'version' version.yaml | cut -d'"' -f2)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Config AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+         aws-region: ${{ secrets.AWS_REGION }}
+    
+      - name: login into AWS ECR
+        uses: aws-actions/amazon-ecr-login@v2
 
       - name: ssh to the server
         uses: appleboy/ssh-action@v1.0.3
