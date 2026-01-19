@@ -4,11 +4,13 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-RUN pip install --upgrade pip 
+RUN pip install --upgrade pip setuptools wheel
+RUN pip install poetry
 
+COPY pyproject.toml poetry.lock /app/
 COPY app/ /app/
 
-RUN pip install *.whl gunicorn
+RUN poetry install --no-dev
 
 ENV PORT=80
 EXPOSE 80
