@@ -85,7 +85,7 @@ jobs:
 
      - name: Load version into environment
        run: |
-          VERSION=$(grep 'version' version.yaml | cut -d'"' -f2)
+          VERSION=$(grep 'version' version.yaml)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
      - name: Download artifact
