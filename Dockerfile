@@ -16,7 +16,7 @@ COPY pyproject.toml poetry.lock* /app/
 COPY app/ /app/
 
 RUN poetry config virtualenvs.create false
-RUN poetry install --without dev
+RUN poetry install --without dev --no-root
 
 ENV PORT=80
 EXPOSE 80
