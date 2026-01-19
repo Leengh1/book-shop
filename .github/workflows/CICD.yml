@@ -63,7 +63,7 @@ jobs:
        run: |
          mkdir -p artifacts
          WHEEL=$(ls dist/*.whl)
-         mv "$WHEEL" "artifacts/book_shop-${VERSION}-${GITHUB_SHA:0:7}.whl"
+         mv "$WHEEL" "artifacts/book-shop-${VERSION}-${GITHUB_SHA:0:7}.whl"
 
      - name: Upload artifacts
        uses: actions/upload-artifact@v4
