@@ -156,8 +156,8 @@ jobs:
 
           BASE_TAG=$(echo "$LATEST_TAG" | cut -d'-' -f1)
           echo "BASE_TAG = $BASE_TAG"
-          echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_OUT
-          echo "BASE_TAG=$BASE_TAG" >> $GITHUB_OUT
+          echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_OUTPUT
+          echo "BASE_TAG=$BASE_TAG" >> $GITHUB_OUTPUT
      
        - name: Tag & push promoted image
          run: |
