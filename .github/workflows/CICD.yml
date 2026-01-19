@@ -208,8 +208,8 @@ jobs:
 
            docker pull $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/book-shop:${{ env.VERSION }}-snapshot
            
-           docker stop bookshop-snapshot
-           docker rm bookshop-snapshot
+           docker stop bookshop-snapshot 
+           docker rm bookshop-snapshot 
            docker run -d \
             -e PORT=4000 \
             -p 8080:4000 \
