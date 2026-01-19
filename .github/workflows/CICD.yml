@@ -156,13 +156,13 @@ jobs:
 
           BASE_TAG=$(echo "$LATEST_TAG" | cut -d'-' -f1)
           echo "BASE_TAG = $BASE_TAG"
-          echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
-          echo "BASE_TAG=$BASE_TAG" >> $GITHUB_ENV
+          echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_OUT
+          echo "BASE_TAG=$BASE_TAG" >> $GITHUB_OUT
      
        - name: Tag & push promoted image
          run: |
-            docker pull ${{ secrets.AWS_ECR_URL }}/book-shop:${{ steps.extract.outputs.$LATEST_TAG }}
-            docker tag ${{ secrets.AWS_ECR_URL }}/book-shop:${{ steps.extract.outputs.$LATEST_TAG }} \
-                      ${{ secrets.AWS_ECR_URL }}/book-shop:${{ steps.extract.outputs.$BASE_TAG }}
-            docker push ${{ secrets.AWS_ECR_URL }}/book-shop:${{ steps.extract.outputs.$BASE_TAG }}
+            docker pull ${{ secrets.AWS_ECR_URL }}/book-shop:${{ steps.extract.outputs.LATEST_TAG }}
+            docker tag ${{ secrets.AWS_ECR_URL }}/book-shop:${{ steps.extract.outputs.LATEST_TAG }} \
+                      ${{ secrets.AWS_ECR_URL }}/book-shop:${{ steps.extract.outputs.BASE_TAG }}
+            docker push ${{ secrets.AWS_ECR_URL }}/book-shop:${{ steps.extract.outputs.BASE_TAG }}
 
