@@ -15,6 +15,7 @@ RUN pip install --upgrade pip && pip install poetry
 COPY pyproject.toml poetry.lock* /app/
 COPY app/ /app/
 
+RUN poetry config virtualenvs.create false
 RUN poetry install --without dev
 
 ENV PORT=80
