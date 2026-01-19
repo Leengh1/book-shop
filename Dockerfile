@@ -4,14 +4,13 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-RUN pip install --upgrade pip && pip install poetry 
+RUN pip install --upgrade pip 
 
-COPY pyproject.toml poetry.lock* /app/
-RUN poetry install --no-root --only main
+COPY dist/*.whl /app/
 
-COPY . /app/
+RUN pip install *.whl gunicorn
 
 ENV PORT=80
-EXPOSE $PORT
+EXPOSE 80
 
 CMD ["sh", "-c", "poetry run gunicorn --bind 0.0.0.0:$PORT book_shop.wsgi:application"]

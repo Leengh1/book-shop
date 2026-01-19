@@ -6,7 +6,7 @@ authors = ["Ayat <alkayedayat93@gmail.com>"]
 packages = [{ include = "book_shop" }]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.11"
 Django = "^4.0.4"
 gunicorn = "^23.0.0"
 
