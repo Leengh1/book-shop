@@ -118,7 +118,7 @@ jobs:
         context: .
         file: ./Dockerfile
         push: true
-        tags: ${{ secrets.AWS_ECR_URL }}/djangoapp:${{ env.VERSION }}
+        tags: ${{ secrets.AWS_ECR_URL }}/book-shop:${{ env.VERSION }}
 
 
 
