@@ -19,7 +19,7 @@ RUN pip install --upgrade pip && pip install poetry
 COPY pyproject.toml poetry.lock* /app/
 COPY app/ /app/
 
-RUN poetry install --no-root --only main
+RUN poetry install --no-dev -vvv
 
 
 ENV PORT=80
