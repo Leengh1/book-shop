@@ -1,24 +1,23 @@
 FROM python:3.11-slim
 
 ENV PYTHONUNBUFFERED=1
-
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y \
-    build-essential \
-    libpq-dev \
-    curl \
+        build-essential \
+        libpq-dev \
+        curl \
+        python3-packaging \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip install --upgrade pip setuptools wheel \
-    && pip install poetry \
-    && pip install packaging
+    && pip install poetry
 
 COPY pyproject.toml poetry.lock* /app/
 COPY app/ /app/
 
-RUN poetry config virtualenvs.create false
-RUN poetry install --without dev --no-root
+RUN poetry config virtualenvs.create false \
+    && poetry install --without dev --no-root
 
 ENV PORT=80
 EXPOSE $PORT
