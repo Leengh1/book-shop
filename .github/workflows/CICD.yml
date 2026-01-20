@@ -96,11 +96,11 @@ jobs:
 
      - name: Extract app artifact
        run: |
-          mkdir -p arti
+          mkdir -p app
           ARTIFACT=$(ls -1 dist/*.whl | tail -n 1)
           echo "Artifact found: $ARTIFACT"
-          cp "$ARTIFACT" arti/  
-          ls -l arti
+          cp "$ARTIFACT" app/  
+          ls -l app
 
      - name: Config AWS credentials
        uses: aws-actions/configure-aws-credentials@v4
