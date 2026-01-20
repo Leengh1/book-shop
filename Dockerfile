@@ -1,26 +1,25 @@
 FROM python:3.11-slim
 
 ENV PYTHONUNBUFFERED=1
+ENV POETRY_VIRTUALENVS_CREATE=false
+
 WORKDIR /app
 
-# Install system dependencies
+COPY pyproject.toml poetry.lock* /app/
+
+
 RUN apt-get update && apt-get install -y \
-        build-essential \
-        libpq-dev \
-        curl \
+    build-essential \
+    libpq-dev \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Upgrade pip and install Python tools including packaging
-RUN pip install --upgrade pip setuptools wheel packaging \
-    && pip install poetry
+RUN pip install --upgrade pip && pip install poetry
 
-# Copy project files
 COPY pyproject.toml poetry.lock* /app/
-COPY app/ /app/
+RUN poetry install --without dev --no-root
 
-# Configure Poetry and install dependencies globally
-RUN poetry config virtualenvs.create false \
-    && poetry install --without dev --no-root
+COPY . /app/
 
 ENV PORT=80
 EXPOSE $PORT
