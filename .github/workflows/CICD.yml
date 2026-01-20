@@ -59,6 +59,9 @@ jobs:
      - name: Build artifact
        run: poetry build
 
+     - name: Check dist content
+       run: ls -l dist
+
      - name: Package artifact
        run: |
          mkdir -p artifacts
