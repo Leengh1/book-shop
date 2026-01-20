@@ -171,6 +171,7 @@ jobs:
      
        - name: Tag & push promoted image
          run: |
+            echo ${{ needs.get-latest-image.outputs.latest_tag }}
             docker pull ${{ secrets.AWS_ECR_URL }}/book-shop:${{ needs.get-latest-image.outputs.latest_tag }}
             docker tag ${{ secrets.AWS_ECR_URL }}/book-shop:${{ needs.get-latest-image.outputs.latest_tag }} \
                       ${{ secrets.AWS_ECR_URL }}/book-shop:${{ steps.extractbase.outputs.base_tag }}
