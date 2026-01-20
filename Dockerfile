@@ -1,6 +1,7 @@
 FROM python:3.11-slim
 
 ENV PYTHONUNBUFFERED=1
+ENV POETRY_VIRTUALENVS_CREATE=false
 
 WORKDIR /app
 
@@ -16,7 +17,6 @@ RUN pip install --upgrade pip setuptools wheel \
 COPY pyproject.toml poetry.lock* /app/
 COPY app/ /app/
 
-RUN poetry config virtualenvs.create false
 RUN poetry install --without dev --no-root
 
 ENV PORT=80
