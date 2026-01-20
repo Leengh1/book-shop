@@ -14,10 +14,12 @@ RUN apt-get update && apt-get install -y \
 RUN pip install --upgrade pip setuptools wheel \
     && pip install "packaging<23" poetry
 
+
 COPY pyproject.toml poetry.lock* /app/
-COPY app/ /app/
 
 RUN poetry install --without dev --no-root
+
+COPY app/ /app/
 
 ENV PORT=80
 EXPOSE $PORT
