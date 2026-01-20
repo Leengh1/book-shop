@@ -59,24 +59,11 @@ jobs:
      - name: Build artifact
        run: poetry build
 
-     - name: Check dist content
-       run: ls -l dist
-
-     #- name: Package artifact
-      # run: |
-       #  mkdir -p artifacts
-        # WHEEL=$(ls dist/*.whl)
-         #mv "$WHEEL" "artifacts/book-shop-${VERSION}-${GITHUB_SHA:0:7}.whl"
-         
      - name: Package artifact
        run: |
-        mkdir -p artifacts
-        cp dist/*.whl artifacts/
-
-     - name: Verify packaged artifact
-       run: |
-        ls -l artifacts
-        file artifacts/*.whl
+         mkdir -p artifacts
+         WHEEL=$(ls dist/*.whl)
+         mv "$WHEEL" "artifacts/book-shop-${VERSION}-${GITHUB_SHA:0:7}.whl"
 
      - name: Upload artifacts
        uses: actions/upload-artifact@v4
