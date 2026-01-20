@@ -24,4 +24,5 @@ COPY app/ /app/
 
 EXPOSE $PORT
 
-CMD ["sh", "-c", "poetry run gunicorn --bind 0.0.0.0:${PORT} book_shop.wsgi:application"]
+CMD ["sh", "-c", "poetry run gunicorn --bind 0.0.0.0:${PORT} app.book_shop.wsgi:application"]
+
