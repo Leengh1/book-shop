@@ -15,13 +15,8 @@ jobs:
 
      - name: Extract Version 
        run: |
-        VERSION=$(python3 -c "
-        import re
-        with open('pyproject.toml') as f:
-            content = f.read()
-        match = re.search(r'version\s*=\s*\"([^\"]+)\"', content)
-        print(match.group(1))
-        ")
+       
+        VERSION=$(poetry version -s)
         echo "VERSION=$VERSION" >> $GITHUB_ENV
         echo "version: \"$VERSION\"" > version.yaml
         ls -l
