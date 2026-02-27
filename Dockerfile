@@ -1,28 +1,19 @@
 FROM python:3.11-slim
 
-ENV PYTHONUNBUFFERED=1
-ENV POETRY_VIRTUALENVS_CREATE=false
-
 WORKDIR /app
 
-COPY pyproject.toml poetry.lock* /app/
+RUN pip install --no-cache-dir gunicorn 
 
+COPY *.whl /app/
 
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    libpq-dev \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+RUN pip install /app/*.whl
 
-RUN pip install --upgrade pip && pip install poetry
+EXPOSE 4000
+EXPOSE 3000
 
-COPY pyproject.toml poetry.lock* /app/
-RUN poetry install --without dev --no-root
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONBUFFERED=1
 
-COPY app/ /app/
-
-ENV PORT=80
-EXPOSE $PORT
-
-CMD ["sh", "-c", "poetry run gunicorn --bind 0.0.0.0:$PORT book_shop.wsgi:application"]
+ENTRYPOINT [ "gunicorn" ]
+CMD [" --bind 0.0.0.0:4000 book_shop.wsgi:application"]
 
