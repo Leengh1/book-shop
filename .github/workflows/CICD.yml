@@ -113,7 +113,7 @@ jobs:
         context: .
         file: ./Dockerfile
         push: true
-        tags: ${{ secrets.AWS_ECR_URL }}/book-shop:${{ env.VERSION }}
+        tags: ${{ secrets.AWS_ECR_URL }}/django-app:${{ env.VERSION }}
 
   get-latest-image:
    runs-on: ubuntu-latest
