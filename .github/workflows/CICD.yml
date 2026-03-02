@@ -19,7 +19,7 @@ jobs:
      - name: Extract Version 
        run: |
        
-        VERSION=$(tomlq -r '.tool.poetry.version' book-shop/pyproject.toml )
+        VERSION=$(tomlq -r '.tool.poetry.version' yproject.toml)
         echo "VERSION=$VERSION" >> $GITHUB_ENV
         echo "version: \"$VERSION\"" > version.yaml
         ls -l
@@ -61,18 +61,16 @@ jobs:
 
      - name: Build artifact
        run: poetry build
-       working-directory: ${{github.workspace}} }/book-shop
 
      - name: Upload artifacts
        uses: actions/upload-artifact@v4
        with:
          name: django-app
-         path: book-shop/dist/
+         path: dist/
 
      - name: debugging artifact
        run: |
-          ls -l book-shop
-          ls -l book-shop/dist
+          ls -l /dist
 
   docker:
    runs-on: ubuntu-latest
