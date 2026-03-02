@@ -135,7 +135,7 @@ jobs:
          id: extractlatest 
          run: |
           LATEST_TAG=$(aws ecr describe-images \
-            --repository-name book-shop \
+            --repository-name django-app \
             --region ${{ secrets.AWS_REGION }} \
             --output json \
           | jq -r '
@@ -185,7 +185,7 @@ jobs:
   deploy-dev:
     runs-on: ubuntu-latest  
     if: github.ref == 'refs/heads/dev'
-    needs: get-latest-image 
+    needs: docker
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v4

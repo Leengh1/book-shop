@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "book-shop"
-version = "0.3.0"
+version = "0.3.0.dev1"
 description = ""
 authors = ["Ayat <alkayedayat93@gmail.com>"]
 packages = [
