@@ -70,7 +70,7 @@ jobs:
 
      - name: debugging artifact
        run: |
-          ls -l /dist
+          ls -l dist
 
   docker:
    runs-on: ubuntu-latest
