@@ -13,24 +13,13 @@ jobs:
      - name: Checkout
        uses: actions/checkout@v4
 
-     - name: Setup python
-       uses: actions/setup-python@v4
-       with:
-         python-version: "3.11"
-
-     - name: Install Poetry
-       run: |
-        python -m pip install --upgrade pip
-        python -m pip install poetry
-        poetry --version
-
-     - name: Install dependencies
-       run: poetry install --no-interaction --no-root --only main
+     - name: Install tomlq
+       run: pip install tomlq
 
      - name: Extract Version 
        run: |
        
-        VERSION=$(poetry version -s)
+        VERSION=$(tomlq -r '.tool.poetry.version' book-shop/pyproject.toml )
         echo "VERSION=$VERSION" >> $GITHUB_ENV
         echo "version: \"$VERSION\"" > version.yaml
         ls -l
@@ -61,24 +50,29 @@ jobs:
        run: |
           VERSION=$(grep 'version' version.yaml | cut -d'"' -f2)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
-          
+      
+     - name: Setup python
+       uses: actions/setup-python@v4
+       with:
+         python-version: "3.11"
+
      - name: Install Poetry
        run: pip install poetry
 
      - name: Build artifact
        run: poetry build
-
-     - name: Package artifact
-       run: |
-         mkdir -p artifacts
-         WHEEL=$(ls dist/*.whl)
-         mv "$WHEEL" "artifacts/book-shop-${VERSION}-${GITHUB_SHA:0:7}.whl"
+       working-directory: ${{github.workspace}} }/book-shop
 
      - name: Upload artifacts
        uses: actions/upload-artifact@v4
        with:
          name: django-app
-         path: artifacts/*
+         path: book-shop/dist/
+
+     - name: debugging artifact
+       run: |
+          ls -l book-shop
+          ls -l book-shop/dist
 
   docker:
    runs-on: ubuntu-latest
@@ -101,16 +95,10 @@ jobs:
        uses: actions/download-artifact@v4
        with:
         name: django-app
-        path: dist
 
-     - name: Extract app artifact
-       run: |
-          mkdir -p app
-          ARTIFACT=$(ls -1 dist/*.whl | tail -n 1)
-          echo "Artifact found: $ARTIFACT"
-          cp "$ARTIFACT" app/  
-          ls -l app
-
+     - name: debugging artifact
+       run: ls -l
+    
      - name: Config AWS credentials
        uses: aws-actions/configure-aws-credentials@v4
        with:
@@ -125,9 +113,9 @@ jobs:
        uses: docker/build-push-action@v6
        with:
         context: .
-        file: ./Dockerfile
+        file: book-shop/Dockerfile
         push: true
-        tags: ${{ secrets.AWS_ECR_URL }}/book-shop:${{ env.VERSION }}-snapshot
+        tags: ${{ secrets.AWS_ECR_URL }}/book-shop:${{ env.VERSION }}
 
   get-latest-image:
    runs-on: ubuntu-latest
