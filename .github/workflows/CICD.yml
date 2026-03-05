@@ -48,6 +48,7 @@ jobs:
 
      - name: Load version into enviroment
        run: |
+          VERSION=$(grep 'version' version.yaml)
           VERSION=$(grep 'version' version.yaml | cut -d'"' -f2)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
       
@@ -131,7 +132,7 @@ jobs:
        - name: login into AWS ECR
          uses: aws-actions/amazon-ecr-login@v2
             
-       - name: Get latest image with snapshot tag
+       - name: Get latest image with dev tag
          id: extractlatest 
          run: |
           LATEST_TAG=$(aws ecr describe-images \
@@ -141,8 +142,8 @@ jobs:
           | jq -r '
               .imageDetails[]
               | select(.imageTags != null)
-              | select([.imageTags[] | contains("snapshot")] | any)
-              | {pushedAt: .imagePushedAt, tag: (.imageTags[] | select(contains("snapshot")))}
+              | select([.imageTags[] | contains("dev")] | any)
+              | {pushedAt: .imagePushedAt, tag: (.imageTags[] | select(contains("dev")))}
             ' | jq -s 'sort_by(.pushedAt) | last.tag')
 
           LATEST_TAG=$(echo "$LATEST_TAG" | tr -d '"')
@@ -170,22 +171,22 @@ jobs:
        - name: Get base image
          id: extractbase 
          run: |
-          BASE_TAG=$(echo "${{ needs.get-latest-image.outputs.latest_tag }}" | cut -d'-' -f1)
+          BASE_TAG=$(echo "${{ needs.get-latest-image.outputs.latest_tag }}" | sed 's/\.dev[0-9]\+$//')
           echo "BASE_TAG = $BASE_TAG"
           echo "BASE_TAG=$BASE_TAG" >> $GITHUB_OUTPUT
      
        - name: Tag & push promoted image
          run: |
             echo ${{ needs.get-latest-image.outputs.latest_tag }}
-            docker pull ${{ secrets.AWS_ECR_URL }}/book-shop:${{ needs.get-latest-image.outputs.latest_tag }}
-            docker tag ${{ secrets.AWS_ECR_URL }}/book-shop:${{ needs.get-latest-image.outputs.latest_tag }} \
-                      ${{ secrets.AWS_ECR_URL }}/book-shop:${{ steps.extractbase.outputs.base_tag }}
-            docker push ${{ secrets.AWS_ECR_URL }}/book-shop:${{ steps.extractbase.outputs.base_tag }}
+            docker pull ${{ secrets.AWS_ECR_URL }}/django-app:${{ needs.get-latest-image.outputs.latest_tag }}
+            docker tag ${{ secrets.AWS_ECR_URL }}/django-app:${{ needs.get-latest-image.outputs.latest_tag }} \
+                      ${{ secrets.AWS_ECR_URL }}/django-app:${{ steps.extractbase.outputs.base_tag }}
+            docker push ${{ secrets.AWS_ECR_URL }}/django-app:${{ steps.extractbase.outputs.base_tag }}
 
   deploy-dev:
     runs-on: ubuntu-latest  
     if: github.ref == 'refs/heads/dev'
-    needs: docker
+    needs: get-latest-image
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v4
@@ -212,20 +213,20 @@ jobs:
            aws ecr get-login-password --region $AWS_REGION \
              | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
 
-           docker pull $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/book-shop:${{ env.VERSION }}-snapshot
+           docker pull $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/django-app:${{ env.VERSION }}
            
-           docker stop bookshop-snapshot 
-           docker rm bookshop-snapshot 
+           docker stop bookshop
+           docker rm bookshop
            docker run -d \
             -e PORT=4000 \
             -p 8080:4000 \
-            --name bookshop-snapshot \
-            ${{ secrets.AWS_ECR_URL }}/book-shop:${{ env.VERSION }}-snapshot
+            --name bookshop \
+            ${{ secrets.AWS_ECR_URL }}/django-app:${{ env.VERSION }}
             
   deploy-prod:
     runs-on: ubuntu-latest  
     if: github.ref == 'refs/heads/main'
-    needs: get-latest-image
+    needs: promote
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v4
@@ -254,7 +255,7 @@ jobs:
               | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
 
             # Pull promoted image (without snapshot)
-            docker pull $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/book-shop:${{ env.VERSION }}
+            docker pull $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/django-app:${{ env.VERSION }}
 
             # Stop and remove old container
             docker stop bookshop-prod || true
@@ -265,4 +266,4 @@ jobs:
               -e PORT=3000 \
               -p 80:3000 \
               --name bookshop-prod \
-              ${{ secrets.AWS_ECR_URL }}/book-shop:${{ env.VERSION }}
+              ${{ secrets.AWS_ECR_URL }}/django-app:${{ env.VERSION }}
