@@ -5,9 +5,9 @@ on:
     branches: [ dev, main]
   workflow_dispatch: 
 
-jobs:
+jobs: 
 
-  prepare:
+  extract-version:
    runs-on: ubuntu-latest
    steps:
      - name: Checkout
@@ -36,7 +36,7 @@ jobs:
 
   build:
    runs-on: ubuntu-latest
-   needs: prepare
+   needs: extract-version
    steps:
      - name: Checkout
        uses: actions/checkout@v4
@@ -215,12 +215,12 @@ jobs:
 
            docker pull $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/django-app:${{ env.VERSION }}
            
-           docker stop bookshop
-           docker rm bookshop
+           docker stop django-app
+           docker rm django-app
            docker run -d \
             -e PORT=4000 \
             -p 8080:4000 \
-            --name bookshop \
+            --name django-app \
             ${{ secrets.AWS_ECR_URL }}/django-app:${{ env.VERSION }}
             
   deploy-prod:
