@@ -217,11 +217,10 @@ jobs:
            
            docker stop django-app
            docker rm django-app
-           docker run -d \
-            -e PORT=4000 \
-            -p 8080:4000 \
+           docker run -dp 8080:4000 \
             --name django-app \
             ${{ secrets.AWS_ECR_URL }}/django-app:${{ env.VERSION }}
+
             
   deploy-prod:
     runs-on: ubuntu-latest  

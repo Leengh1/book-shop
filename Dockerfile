@@ -13,5 +13,4 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONBUFFERED=1
 
 ENTRYPOINT [ "gunicorn" ]
-CMD [" --bind 0.0.0.0:4000 book_shop.wsgi:application"]
-
+CMD ["book_shop.wsgi:application", "--bind", "0.0.0.0:4000"]
