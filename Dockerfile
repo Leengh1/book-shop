@@ -11,9 +11,9 @@ RUN pip install /app/*.whl
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONBUFFERED=1
-ENV PORT = 8000
+ENV PORT=8000
 
-ENTRYPOINT [ "gunicorn" ]
+#ENTRYPOINT [ "gunicorn" ]
 #CMD ["book_shop.wsgi:application", "--bind", "0.0.0.0:4000"]
-ENTRYPOINT [ "sh", "-c", "gunicorn book_shop.wsgi:application --bind 0.0.0.0:${PORT:-8000}" ]
 
+ENTRYPOINT ["sh", "-c", "gunicorn book_shop.wsgi:application --bind 0.0.0.0:${PORT}"]
