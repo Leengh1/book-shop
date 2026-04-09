@@ -237,6 +237,7 @@ jobs:
             # Run new container
             docker run -d \
               -e PORT=3000 \
+              -p 80:3000 \
               --name bookshop-prod \
               ${{ secrets.AWS_ECR_URL }}/django-app:${{ needs.promote.outputs.base_tag }}
 
