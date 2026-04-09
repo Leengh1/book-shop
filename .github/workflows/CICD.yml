@@ -45,12 +45,6 @@ jobs:
        uses: actions/download-artifact@v4
        with:
            name: version
-
-     - name: Load version into enviroment
-       run: |
-          VERSION=$(grep 'version' version.yaml)
-          VERSION=$(grep 'version' version.yaml | cut -d'"' -f2)
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
       
      - name: Setup python
        uses: actions/setup-python@v4
@@ -80,7 +74,7 @@ jobs:
      - name: Checkout
        uses: actions/checkout@v4 
 
-     - name: Download artifact
+     - name: Download version artifact
        uses: actions/download-artifact@v4
        with:
            name: version
@@ -90,7 +84,7 @@ jobs:
           VERSION=$(grep 'version' version.yaml | cut -d'"' -f2)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
-     - name: Download artifact
+     - name: Download app artifact
        uses: actions/download-artifact@v4
        with:
         name: django-app
@@ -188,16 +182,6 @@ jobs:
     if: github.ref == 'refs/heads/dev'
     needs: get-latest-image
     steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-           name: version
-
-      - name: Load version into enviroment
-        run: |
-          VERSION=$(grep 'version' version.yaml | cut -d'"' -f2)
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-
       - name: ssh to the server
         uses: appleboy/ssh-action@v1.0.3
         with:  
@@ -213,13 +197,13 @@ jobs:
            aws ecr get-login-password --region $AWS_REGION \
              | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
 
-           docker pull $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/django-app:${{ env.VERSION }}
+           docker pull $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/django-app:${{ needs.get-latest-image.outputs.latest_tag }}
            
            docker stop django-app
            docker rm django-app
            docker run -dp 8080:4000 \
             --name django-app \
-            ${{ secrets.AWS_ECR_URL }}/django-app:${{ env.VERSION }}
+            ${{ secrets.AWS_ECR_URL }}/django-app:${{ needs.get-latest-image.outputs.latest_tag }}
 
             
   deploy-prod:
@@ -227,16 +211,6 @@ jobs:
     if: github.ref == 'refs/heads/main'
     needs: promote
     steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: version
-
-      - name: Load version into environment
-        run: |
-          VERSION=$(grep 'version' version.yaml | cut -d'"' -f2)
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-
       - name: SSH to the server and deploy
         uses: appleboy/ssh-action@v1.0.3
         with:  
@@ -254,7 +228,7 @@ jobs:
               | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
 
             # Pull promoted image (without snapshot)
-            docker pull $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/django-app:${{ env.VERSION }}
+            docker pull $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/django-app:${{ needs.promote.outputs.base_tag }}
 
             # Stop and remove old container
             docker stop bookshop-prod || true
@@ -263,6 +237,31 @@ jobs:
             # Run new container
             docker run -d \
               -e PORT=3000 \
-              -p 80:3000 \
               --name bookshop-prod \
-              ${{ secrets.AWS_ECR_URL }}/django-app:${{ env.VERSION }}
+              ${{ secrets.AWS_ECR_URL }}/django-app:${{ needs.promote.outputs.base_tag }}
+
+            # Remove default Nginx site (if exists)
+            sudo rm -f /etc/nginx/sites-enabled/default
+            sudo rm -f /etc/nginx/sites-available/default
+
+            # Configure Nginx reverse proxy for port 80
+            NGINX_CONF="/etc/nginx/sites-available/bookshop.conf"
+            sudo sh -c "echo 'server {
+              listen 80;
+              server_name _;
+              location / {
+                  proxy_pass http://127.0.0.1:3000;
+                  proxy_set_header Host \$host;
+                  proxy_set_header X-Real-IP \$remote_addr;
+                  proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto \$scheme;
+              }
+            }' > $NGINX_CONF"
+
+             sudo ln -sf $NGINX_CONF /etc/nginx/sites-enabled/bookshop.conf
+            # Test and reload Nginx
+             sudo nginx -t
+             sudo systemctl reload nginx
+
+
+            

@@ -55,12 +55,6 @@ usermod -aG docker $user
 echo "Docker status: $(systemctl is-active docker)"
 echo "Nginx status: $(systemctl is-active nginx)"
 
-
-#install microk8s
-sudo snap install microk8s --classic
-usermod -aG microk8s $user
-
-
 #install aws cli
 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
 sudo apt install unzip
