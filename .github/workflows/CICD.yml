@@ -201,11 +201,12 @@ jobs:
            
            docker stop django-app
            docker rm django-app
-           docker run -dp 8080:4000 \
-            --name django-app \
+           docker run -d \
+           --name django-app \
+           -e PORT=4000 \
+           -p 8080:4000 \
             ${{ secrets.AWS_ECR_URL }}/django-app:${{ needs.get-latest-image.outputs.latest_tag }}
 
-            
   deploy-prod:
     runs-on: ubuntu-latest  
     if: github.ref == 'refs/heads/main'
@@ -237,7 +238,7 @@ jobs:
             # Run new container
             docker run -d \
               -e PORT=3000 \
-              -p 80:3000 \
+              -p 3000:3000 \
               --name bookshop-prod \
               ${{ secrets.AWS_ECR_URL }}/django-app:${{ needs.promote.outputs.base_tag }}
 
@@ -254,15 +255,13 @@ jobs:
                   proxy_pass http://127.0.0.1:3000;
                   proxy_set_header Host \$host;
                   proxy_set_header X-Real-IP \$remote_addr;
-                  proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-                  proxy_set_header X-Forwarded-Proto \$scheme;
               }
             }' > $NGINX_CONF"
 
              sudo ln -sf $NGINX_CONF /etc/nginx/sites-enabled/bookshop.conf
             # test and reload Nginx
-             sudo nginx -t
-             sudo systemctl reload nginx
+            sudo nginx -t && sudo systemctl reload nginx
+
 
 
             
