@@ -11,6 +11,10 @@ EXPOSE 3000
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONBUFFERED=1
+ENV PORT=4000
 
-ENTRYPOINT [ "gunicorn" ]
-CMD ["book_shop.wsgi:application", "--bind", "0.0.0.0:4000"]
+ENTRYPOINT ["gunicorn"]
+CMD ["book_shop.wsgi:application", "--bind", "0.0.0.0:${PORT}"]
+
+#ENTRYPOINT [ "gunicorn" ]
+#CMD ["book_shop.wsgi:application", "--bind", "0.0.0.0:4000"]
